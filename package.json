@@ -1,16 +1,23 @@
 {
   "name": "connect-four-wasm",
   "version": "1.0.0",
-  "description": "Connect Four game with WebAssembly and AI",
+  "description": "Connect Four game with WebAssembly and AI - Choose your play order, see AI evaluation",
   "main": "index.html",
   "scripts": {
     "build": "./build.sh",
     "serve": "python3 -m http.server 8000",
-    "dev": "npm run build && npm run serve"
+    "serve-node": "npx serve . -p 8000",
+    "dev": "npm run build && npm run serve",
+    "clean": "rm -rf pkg target"
   },
-  "keywords": ["connect4", "webassembly", "rust", "ai", "game"],
+  "keywords": ["connect4", "webassembly", "rust", "ai", "game", "minimax", "wasm"],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hoff97/connect-four.git"
+  },
+  "homepage": "https://Hoff97.github.io/connect-four",
   "devDependencies": {
     "serve": "^14.2.1"
   }

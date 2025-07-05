@@ -2,6 +2,10 @@
 
 A web-based Connect Four game where you can play against an AI opponent. Built with Rust compiled to WebAssembly for high-performance AI calculations.
 
+## 🎮 Play Online
+
+The game is automatically deployed to GitHub Pages: **[Play Connect Four](https://Hoff97.github.io/connect-four)**
+
 ## Features
 
 - 🎮 Play Connect Four against AI
@@ -10,6 +14,8 @@ A web-based Connect Four game where you can play against an AI opponent. Built w
 - ⚡ Fast AI calculations powered by WebAssembly
 - 🔄 Undo functionality
 - 📱 Mobile-friendly design
+- 🎯 Choose to play as first or second player
+- 🧠 AI evaluation display showing position assessment
 
 ## Prerequisites
 
@@ -141,6 +147,38 @@ All visual styling is in the `<style>` section of `index.html`. The design uses:
 - CSS Gradients for modern look
 - Flexbox for responsive design
 - CSS Transitions for smooth animations
+
+## Deployment
+
+### Automatic Deployment (GitHub Pages)
+
+The project includes a GitHub Actions workflow that automatically:
+1. Builds the WebAssembly module
+2. Deploys to GitHub Pages on every push to the main branch
+
+To enable GitHub Pages for your fork:
+1. Go to your repository settings
+2. Navigate to "Pages" section
+3. Set source to "GitHub Actions"
+4. Push to main branch to trigger deployment
+
+### Manual Deployment
+
+To deploy to any static hosting service:
+
+1. **Build the project:**
+   ```bash
+   wasm-pack build --target web --out-dir pkg
+   ```
+
+2. **Upload all files** to your hosting service:
+   - `index.html`
+   - `pkg/` directory (contains WebAssembly files)
+   - `.nojekyll` file (for GitHub Pages)
+
+3. **Ensure proper MIME types:**
+   - `.wasm` files should be served as `application/wasm`
+   - Most modern hosting services handle this automatically
 
 ## Troubleshooting
 
