@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use serde::{Deserialize, Serialize};
 
 use crate::minmax::GameState;
 
@@ -7,7 +8,7 @@ pub struct GameAction {
     pub column: u8, // Column index where the disc is dropped
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Tile {
     Empty,
     Player1,

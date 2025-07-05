@@ -1,0 +1,17 @@
+{
+  "name": "connect-four-wasm",
+  "version": "1.0.0",
+  "description": "Connect Four game with WebAssembly and AI",
+  "main": "index.html",
+  "scripts": {
+    "build": "./build.sh",
+    "serve": "python3 -m http.server 8000",
+    "dev": "npm run build && npm run serve"
+  },
+  "keywords": ["connect4", "webassembly", "rust", "ai", "game"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

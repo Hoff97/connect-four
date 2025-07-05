@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four - Play Against AI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-info {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin: 20px 0;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background: #16213e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell:hover {
+            background: #0f3460;
+            transform: scale(1.05);
+        }
+
+        .cell.empty {
+            background: #16213e;
+        }
+
+        .cell.player1 {
+            background: radial-gradient(circle, #ff6b6b, #ee5a52);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .cell.player2 {
+            background: radial-gradient(circle, #4ecdc4, #44a08d);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin: 20px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        .winner {
+            font-size: 1.5em;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .loading {
+            color: #4ecdc4;
+        }
+
+        .difficulty {
+            margin: 20px 0;
+        }
+
+        .difficulty select {
+            background: #1a1a2e;
+            color: white;
+            border: 2px solid #4ecdc4;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .difficulty select:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .column-buttons {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .column-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .column-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #4ecdc4;
+        }
+
+        .column-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔴 Connect Four 🟡</h1>
+        
+        <div class="game-info">
+            <div>You are <span style="color: #ff6b6b;">Red</span> | AI is <span style="color: #4ecdc4;">Blue</span></div>
+        </div>
+
+        <div class="difficulty">
+            <label for="difficulty">AI Difficulty: </label>
+            <select id="difficulty">
+                <option value="3">Easy (Depth 3)</option>
+                <option value="5" selected>Medium (Depth 5)</option>
+                <option value="7">Hard (Depth 7)</option>
+                <option value="9">Expert (Depth 9)</option>
+            </select>
+        </div>
+
+        <div class="status" id="status">Your turn! Click a column to drop your piece.</div>
+
+        <div class="column-buttons" id="columnButtons">
+            <!-- Column buttons will be generated by JavaScript -->
+        </div>
+
+        <div class="board" id="board">
+            <!-- Board will be generated by JavaScript -->
+        </div>
+
+        <div class="controls">
+            <button id="resetButton">New Game</button>
+            <button id="undoButton" disabled>Undo Move</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, { ConnectFourGame } from './pkg/fourrow.js';
+
+        let game;
+        let gameHistory = [];
+        let isAiTurn = false;
+
+        async function run() {
+            await init();
+            game = new ConnectFourGame();
+            initializeBoard();
+            updateStatus();
+        }
+
+        function initializeBoard() {
+            const board = document.getElementById('board');
+            const columnButtons = document.getElementById('columnButtons');
+            
+            // Clear existing content
+            board.innerHTML = '';
+            columnButtons.innerHTML = '';
+
+            // Create column buttons
+            for (let col = 0; col < 7; col++) {
+                const button = document.createElement('button');
+                button.className = 'column-button';
+                button.textContent = `↓ ${col}`;
+                button.onclick = () => makeMove(col);
+                columnButtons.appendChild(button);
+            }
+
+            // Create board cells (top to bottom for display)
+            for (let row = 5; row >= 0; row--) {
+                for (let col = 0; col < 7; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell empty';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.onclick = () => makeMove(col);
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        function updateBoard() {
+            const boardData = JSON.parse(game.get_board());
+            const cells = document.querySelectorAll('.cell');
+            
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const tileValue = boardData[row][col];
+                
+                cell.className = 'cell';
+                if (tileValue === 'Empty') {
+                    cell.className += ' empty';
+                } else if (tileValue === 'Player1') {
+                    cell.className += ' player1';
+                } else if (tileValue === 'Player2') {
+                    cell.className += ' player2';
+                }
+            });
+        }
+
+        function updateStatus() {
+            const status = document.getElementById('status');
+            const gameResult = game.get_game_result();
+            
+            if (gameResult === 1) {
+                status.innerHTML = '<span class="winner">🎉 You Win! 🎉</span>';
+                disableBoard();
+            } else if (gameResult === 2) {
+                status.innerHTML = '<span class="winner">🤖 AI Wins! 🤖</span>';
+                disableBoard();
+            } else if (gameResult === 3) {
+                status.innerHTML = '<span class="winner">🤝 It\'s a Draw! 🤝</span>';
+                disableBoard();
+            } else if (isAiTurn) {
+                status.innerHTML = '<span class="loading">🤖 AI is thinking...</span>';
+                disableBoard();
+            } else {
+                status.textContent = 'Your turn! Click a column to drop your piece.';
+                enableBoard();
+            }
+        }
+
+        function enableBoard() {
+            const possibleMoves = game.get_possible_moves();
+            const columnButtons = document.querySelectorAll('.column-button');
+            const cells = document.querySelectorAll('.cell');
+            
+            columnButtons.forEach((button, index) => {
+                button.disabled = !possibleMoves.includes(index);
+            });
+            
+            cells.forEach(cell => {
+                const col = parseInt(cell.dataset.col);
+                cell.style.cursor = possibleMoves.includes(col) ? 'pointer' : 'not-allowed';
+            });
+        }
+
+        function disableBoard() {
+            const columnButtons = document.querySelectorAll('.column-button');
+            const cells = document.querySelectorAll('.cell');
+            
+            columnButtons.forEach(button => {
+                button.disabled = true;
+            });
+            
+            cells.forEach(cell => {
+                cell.style.cursor = 'not-allowed';
+            });
+        }
+
+        async function makeMove(column) {
+            if (isAiTurn || game.get_game_result() !== 0) {
+                return;
+            }
+
+            const possibleMoves = game.get_possible_moves();
+            if (!possibleMoves.includes(column)) {
+                return;
+            }
+
+            // Save current state for undo
+            gameHistory.push({
+                board: game.get_board(),
+                currentPlayer: game.get_current_player()
+            });
+
+            // Make human move
+            if (game.make_move(column)) {
+                updateBoard();
+                updateStatus();
+                
+                // Check if game is over
+                if (game.get_game_result() !== 0) {
+                    document.getElementById('undoButton').disabled = false;
+                    return;
+                }
+
+                // AI turn
+                isAiTurn = true;
+                updateStatus();
+                
+                // Delay AI move for better UX
+                setTimeout(async () => {
+                    const difficulty = parseInt(document.getElementById('difficulty').value);
+                    const aiMove = game.get_ai_move(difficulty);
+                    
+                    if (aiMove !== undefined) {
+                        game.make_move(aiMove);
+                        updateBoard();
+                    }
+                    
+                    isAiTurn = false;
+                    updateStatus();
+                    document.getElementById('undoButton').disabled = false;
+                }, 500);
+            }
+        }
+
+        function resetGame() {
+            game.reset();
+            gameHistory = [];
+            isAiTurn = false;
+            updateBoard();
+            updateStatus();
+            document.getElementById('undoButton').disabled = true;
+        }
+
+        function undoMove() {
+            if (gameHistory.length === 0 || isAiTurn) {
+                return;
+            }
+
+            // Undo last two moves (human + AI) or just the last move if it's the only one
+            const previousState = gameHistory.pop();
+            if (previousState) {
+                game.reset();
+                // Note: In a real implementation, you'd need to restore the exact state
+                // For now, just reset and let the user know
+                resetGame();
+            }
+        }
+
+        // Event listeners
+        document.getElementById('resetButton').onclick = resetGame;
+        document.getElementById('undoButton').onclick = undoMove;
+
+        // Initialize the game
+        run();
+    </script>
+</body>
+</html>
