@@ -4,10 +4,7 @@ mod minmax;
 use crate::minmax::GameState;
 
 fn main() {
-    let mut state = four::FourRow {
-        board: [[four::Tile::Empty; four::BOARD_WIDTH]; four::BOARD_HEIGHT],
-        current_player: four::Player::Player1,
-    };
+    let mut state = four::FourRow::new();
 
     while state.get_terminal() == four::GameResult::Ongoing {
         println!("{:?}", state);
@@ -44,7 +41,7 @@ fn main() {
         } else {
             println!("AI 2 is thinking...");
             let mut explored_states = std::collections::HashMap::new();
-            let game_tree = minmax::minmax(state, 20, false, &mut explored_states, f32::NEG_INFINITY, f32::INFINITY);
+            let game_tree = minmax::minmax(state, 5, false, &mut explored_states, f32::NEG_INFINITY, f32::INFINITY);
             state = game_tree.best_child(false, &explored_states)
                 .expect("No valid moves found").clone();
             println!("Evaluation: {}", game_tree.evaluation);
