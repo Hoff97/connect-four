@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
 use crate::minmax::GameState;
 
@@ -164,7 +164,7 @@ impl FourRow {
         if tiles[0] != Tile::Empty && tiles[0] == tiles[1] && tiles[1] == tiles[2] {
             // Check how many sides this line of 3 can be extended on
             let extension_sides = self.count_extension_sides(&positions);
-            
+
             if extension_sides > 0 {
                 let score = if extension_sides == 2 { 0.08 } else { 0.05 };
                 match tiles[0] {
@@ -192,7 +192,7 @@ impl FourRow {
             positions[0].0 as i32 - row_diff,
             positions[0].1 as i32 - col_diff,
         );
-        
+
         // Check position after the last tile
         let after_pos = (
             positions[2].0 as i32 + row_diff,
@@ -207,20 +207,20 @@ impl FourRow {
 
     fn is_valid_extension_position(&self, pos: (i32, i32)) -> bool {
         let (row, col) = pos;
-        
+
         // Check if position is within bounds
         if row < 0 || row >= BOARD_HEIGHT as i32 || col < 0 || col >= BOARD_WIDTH as i32 {
             return false;
         }
-        
+
         let row = row as usize;
         let col = col as usize;
-        
+
         // Position must be empty
         if self.board[row][col] != Tile::Empty {
             return false;
         }
-        
+
         true
     }
 
@@ -295,7 +295,7 @@ impl FourRow {
             .iter()
             .all(|row| row.iter().all(|&tile| tile != Tile::Empty))
         {
-            return GameResult::Draw
+            return GameResult::Draw;
         }
 
         return GameResult::Ongoing;
@@ -308,7 +308,7 @@ impl GameState for FourRow {
     fn get_possible_actions(&self) -> Vec<Self::Action> {
         (0..BOARD_WIDTH)
             .filter(|&col| self.board[BOARD_HEIGHT - 1][col] == Tile::Empty)
-            .map(|x| GameAction{column: x as u8})
+            .map(|x| GameAction { column: x as u8 })
             .collect()
     }
 

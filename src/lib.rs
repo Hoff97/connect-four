@@ -1,10 +1,10 @@
 mod four;
 mod minmax;
 
+use crate::minmax::GameState;
+use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
-use std::collections::HashMap;
-use crate::minmax::GameState;
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 macro_rules! log {
@@ -44,7 +44,11 @@ impl ConnectFourGame {
 
     #[wasm_bindgen]
     pub fn get_possible_moves(&self) -> Vec<u8> {
-        self.state.get_possible_actions().iter().map(|a| a.column).collect()
+        self.state
+            .get_possible_actions()
+            .iter()
+            .map(|a| a.column)
+            .collect()
     }
 
     #[wasm_bindgen]
@@ -71,10 +75,10 @@ impl ConnectFourGame {
     #[wasm_bindgen]
     pub fn get_ai_move(&mut self, depth: u8, ai_is_player1: bool) -> Option<u8> {
         log!("AI is thinking with depth {}...", depth);
-        
+
         let mut explored_states = HashMap::new();
         let maximizing_player = ai_is_player1;
-        
+
         let game_tree = minmax::minmax(
             self.state.clone(),
             depth,
@@ -92,7 +96,11 @@ impl ConnectFourGame {
             for action in self.state.get_possible_actions() {
                 let new_state = self.state.apply_action(&action);
                 if new_state == *best_state {
-                    log!("AI chose column {} with evaluation {}", action.column, game_tree.evaluation);
+                    log!(
+                        "AI chose column {} with evaluation {}",
+                        action.column,
+                        game_tree.evaluation
+                    );
                     return Some(action.column);
                 }
             }

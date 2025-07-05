@@ -38,10 +38,18 @@ impl<T: GameState + Eq + Hash> GameTree<T> {
         self.evaluation
     }
 
-    pub fn get_main_line<'a>(&'a self, explored_states: &'a HashMap<T, GameTree<T>>) -> Vec<MainLineItem<'a, T>> {
+    pub fn get_main_line<'a>(
+        &'a self,
+        explored_states: &'a HashMap<T, GameTree<T>>,
+    ) -> Vec<MainLineItem<'a, T>> {
         let mut main_line = Vec::new();
         let current_node: &T = &self.state;
-        main_line.push(MainLineItem { state: current_node, evaluation: explored_states.get(current_node).map_or(0.0, |tree| tree.evaluation) });
+        main_line.push(MainLineItem {
+            state: current_node,
+            evaluation: explored_states
+                .get(current_node)
+                .map_or(0.0, |tree| tree.evaluation),
+        });
 
         if self.children.is_empty() {
             return main_line;
@@ -59,18 +67,27 @@ impl<T: GameState + Eq + Hash> GameTree<T> {
         return main_line;
     }
 
-    pub fn best_child(&self, maximizing_player: bool, explored_states: &HashMap<T, GameTree<T>>) -> Option<&T> {
+    pub fn best_child(
+        &self,
+        maximizing_player: bool,
+        explored_states: &HashMap<T, GameTree<T>>,
+    ) -> Option<&T> {
         if self.children.is_empty() {
             return None;
         }
 
         let mut best_child = None;
-        let mut best_evaluation = if maximizing_player { f32::NEG_INFINITY } else { f32::INFINITY };
+        let mut best_evaluation = if maximizing_player {
+            f32::NEG_INFINITY
+        } else {
+            f32::INFINITY
+        };
 
         for child in &self.children {
             if let Some(child_tree) = explored_states.get(child) {
-                if (maximizing_player && child_tree.evaluation > best_evaluation) ||
-                   (!maximizing_player && child_tree.evaluation < best_evaluation) {
+                if (maximizing_player && child_tree.evaluation > best_evaluation)
+                    || (!maximizing_player && child_tree.evaluation < best_evaluation)
+                {
                     best_evaluation = child_tree.evaluation;
                     best_child = Some(child);
                 }
@@ -111,16 +128,27 @@ pub fn minmax<'a, T: GameState + Hash + Eq + Clone + Debug>(
         .map(|action| {
             let state = tree.state.apply_action(action);
             let eval = state.evaluate().unwrap_or(0.0);
-            return (state, if maximizing_player {eval} else {-eval});
+            return (state, if maximizing_player { eval } else { -eval });
         })
         .collect();
-    next_states.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal).reverse());
+    next_states.sort_by(|a, b| {
+        a.1.partial_cmp(&b.1)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .reverse()
+    });
 
     for (new_state, _) in next_states {
         if let Some(_) = explored_states.get(&new_state) {
             tree.children.push(new_state);
         } else {
-            let child_tree = minmax(new_state, depth - 1, !maximizing_player, explored_states, alpha, beta);
+            let child_tree = minmax(
+                new_state,
+                depth - 1,
+                !maximizing_player,
+                explored_states,
+                alpha,
+                beta,
+            );
             tree.children.push(child_tree.state.clone());
             explored_states.insert(child_tree.state.clone(), child_tree);
         }
