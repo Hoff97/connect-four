@@ -163,7 +163,21 @@ fn bench_minimax_depth(c: &mut Criterion) {
             })
         });
     }
-    
+
+    group.bench_with_input(BenchmarkId::new("depth", 12), &12, |b, &depth| {
+            b.iter(|| {
+                let mut explored_states = HashMap::new();
+                black_box(minmax(
+                    game.clone(),
+                    depth,
+                    true,
+                    &mut explored_states,
+                    f32::NEG_INFINITY,
+                    f32::INFINITY,
+                ))
+            })
+        });
+
     group.finish();
 }
 
