@@ -177,6 +177,7 @@
         
         <div class="game-info">
             <div>You are <span style="color: #ff6b6b;">Red</span> | AI is <span style="color: #4ecdc4;">Blue</span></div>
+            <div id="aiEvaluation" class="ai-evaluation" style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;"></div>
         </div>
 
         <div class="difficulty">
@@ -291,6 +292,29 @@
             }
         }
 
+        function updateAiEvaluation(evaluation) {
+            const evalDiv = document.getElementById('aiEvaluation');
+            if (evaluation !== undefined && evaluation !== null) {
+                let evalText = '';
+                let evalColor = '';
+                
+                if (evaluation < -0.2) {
+                    evalText = `AI thinks it's winning (${evaluation.toFixed(2)})`;
+                    evalColor = '#4ecdc4'; // AI color
+                } else if (evaluation > 0.2) {
+                    evalText = `AI thinks you're winning (+${evaluation.toFixed(2)})`;
+                    evalColor = '#ff6b6b'; // Player color
+                } else {
+                    evalText = `Position is balanced (${evaluation.toFixed(2)})`;
+                    evalColor = '#ffd700'; // Neutral color
+                }
+                
+                evalDiv.innerHTML = `<span style="color: ${evalColor};">🧠 ${evalText}</span>`;
+            } else {
+                evalDiv.innerHTML = '';
+            }
+        }
+
         function enableBoard() {
             const possibleMoves = game.get_possible_moves();
             const columnButtons = document.querySelectorAll('.column-button');
@@ -358,6 +382,10 @@
                     if (aiMove !== undefined) {
                         game.make_move(aiMove);
                         updateBoard();
+                        
+                        // Display AI evaluation
+                        const evaluation = game.get_last_ai_evaluation();
+                        updateAiEvaluation(evaluation);
                     }
                     
                     isAiTurn = false;
@@ -373,6 +401,7 @@
             isAiTurn = false;
             updateBoard();
             updateStatus();
+            updateAiEvaluation(null); // Clear AI evaluation
             document.getElementById('undoButton').disabled = true;
         }
 

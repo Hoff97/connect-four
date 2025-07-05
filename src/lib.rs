@@ -16,6 +16,7 @@ macro_rules! log {
 #[wasm_bindgen]
 pub struct ConnectFourGame {
     state: four::FourRow,
+    last_ai_evaluation: Option<f32>,
 }
 
 #[wasm_bindgen]
@@ -24,6 +25,7 @@ impl ConnectFourGame {
     pub fn new() -> ConnectFourGame {
         ConnectFourGame {
             state: four::FourRow::new(),
+            last_ai_evaluation: None,
         }
     }
 
@@ -67,7 +69,7 @@ impl ConnectFourGame {
     }
 
     #[wasm_bindgen]
-    pub fn get_ai_move(&self, depth: u8) -> Option<u8> {
+    pub fn get_ai_move(&mut self, depth: u8) -> Option<u8> {
         log!("AI is thinking with depth {}...", depth);
         
         let mut explored_states = HashMap::new();
@@ -79,6 +81,9 @@ impl ConnectFourGame {
             f32::NEG_INFINITY,
             f32::INFINITY,
         );
+
+        // Store the evaluation for later retrieval
+        self.last_ai_evaluation = Some(game_tree.evaluation);
 
         if let Some(best_state) = game_tree.best_child(false, &explored_states) {
             // Find which column was played by comparing the states
@@ -95,8 +100,14 @@ impl ConnectFourGame {
     }
 
     #[wasm_bindgen]
+    pub fn get_last_ai_evaluation(&self) -> Option<f32> {
+        self.last_ai_evaluation
+    }
+
+    #[wasm_bindgen]
     pub fn reset(&mut self) {
         self.state = four::FourRow::new();
+        self.last_ai_evaluation = None;
     }
 
     #[wasm_bindgen]
