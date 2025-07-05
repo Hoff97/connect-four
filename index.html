@@ -22,6 +22,7 @@
             text-align: center;
             max-width: 520px;
             width: 100%;
+            padding: 0 10px;
         }
 
         h1 {
@@ -44,11 +45,14 @@
             border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.3);
             margin: 12px 0;
+            max-width: 100%;
         }
 
         .cell {
             width: 48px;
             height: 48px;
+            max-width: 12vw;
+            max-height: 12vw;
             background: #16213e;
             border-radius: 50%;
             display: flex;
@@ -58,6 +62,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            aspect-ratio: 1;
         }
 
         .cell:hover {
@@ -181,6 +186,116 @@
         .column-button:disabled {
             opacity: 0.3;
             cursor: not-allowed;
+        }
+        
+        /* Small screens - below 450px */
+        @media (max-width: 410px) {
+            .container {
+                padding: 0 2px;
+            }
+            
+            .board {
+                padding: 4px;
+                gap: 1px;
+                margin: 6px 0;
+            }
+            
+            .cell {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                min-height: 40px;
+                max-width: 10vw;
+                max-height: 10vw;
+            }
+            
+            .column-buttons {
+                gap: 1px;
+                margin-bottom: 2px;
+            }
+            
+            .column-button {
+                padding: 1px;
+                font-size: 0.6em;
+                min-height: 20px;
+            }
+            
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 8px;
+            }
+            
+            .game-info {
+                font-size: 0.8em;
+                margin-bottom: 8px;
+            }
+            
+            .game-settings {
+                margin: 6px 0;
+            }
+            
+            button {
+                padding: 4px 8px;
+                font-size: 0.75em;
+                margin: 0 2px;
+            }
+        }
+        
+        /* Very small screens - below 360px */
+        @media (max-width: 360px) {
+            .container {
+                padding: 0 1px;
+            }
+            
+            .board {
+                padding: 2px;
+                gap: 0px;
+                margin: 4px 0;
+            }
+            
+            .cell {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                min-height: 32px;
+            }
+            
+            .column-buttons {
+                gap: 0px;
+                margin-bottom: 1px;
+            }
+            
+            .column-button {
+                font-size: 0.5em;
+                padding: 0px;
+                min-height: 18px;
+            }
+            
+            h1 {
+                font-size: 1.2em;
+                margin-bottom: 6px;
+            }
+            
+            .game-info {
+                font-size: 0.75em;
+                margin-bottom: 6px;
+            }
+            
+            .status {
+                font-size: 0.8em;
+                margin: 6px 0;
+            }
+            
+            button {
+                padding: 3px 6px;
+                font-size: 0.7em;
+                margin: 0 1px;
+            }
+            
+            .difficulty select, .player-order select {
+                font-size: 0.7em;
+                padding: 2px 4px;
+            }
         }
     </style>
 </head>
