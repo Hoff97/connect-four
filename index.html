@@ -128,7 +128,19 @@
             margin: 20px 0;
         }
 
-        .difficulty select {
+        .game-settings {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .player-order {
+            margin: 20px 0;
+        }
+
+        .difficulty select, .player-order select {
             background: #1a1a2e;
             color: white;
             border: 2px solid #4ecdc4;
@@ -138,7 +150,7 @@
             cursor: pointer;
         }
 
-        .difficulty select:focus {
+        .difficulty select:focus, .player-order select:focus {
             outline: none;
             border-color: #ff6b6b;
         }
@@ -176,18 +188,28 @@
         <h1>🔴 Connect Four 🟡</h1>
         
         <div class="game-info">
-            <div>You are <span style="color: #ff6b6b;">Red</span> | AI is <span style="color: #4ecdc4;">Blue</span></div>
+            <div id="playerInfo">You are <span style="color: #ff6b6b;">Red</span> | AI is <span style="color: #4ecdc4;">Blue</span></div>
             <div id="aiEvaluation" class="ai-evaluation" style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;"></div>
         </div>
 
-        <div class="difficulty">
-            <label for="difficulty">AI Difficulty: </label>
-            <select id="difficulty">
-                <option value="3">Easy (Depth 3)</option>
-                <option value="5" selected>Medium (Depth 5)</option>
-                <option value="7">Hard (Depth 7)</option>
-                <option value="9">Expert (Depth 9)</option>
-            </select>
+        <div class="game-settings">
+            <div class="difficulty">
+                <label for="difficulty">AI Difficulty: </label>
+                <select id="difficulty">
+                    <option value="3">Easy (Depth 3)</option>
+                    <option value="5" selected>Medium (Depth 5)</option>
+                    <option value="7">Hard (Depth 7)</option>
+                    <option value="9">Expert (Depth 9)</option>
+                </select>
+            </div>
+            
+            <div class="player-order">
+                <label for="playerOrder">Play as: </label>
+                <select id="playerOrder">
+                    <option value="first" selected>First Player (Red)</option>
+                    <option value="second">Second Player (Blue)</option>
+                </select>
+            </div>
         </div>
 
         <div class="status" id="status">Your turn! Click a column to drop your piece.</div>
@@ -212,12 +234,19 @@
         let game;
         let gameHistory = [];
         let isAiTurn = false;
+        let playerIsFirst = true; // Track if human player goes first
 
         async function run() {
             await init();
             game = new ConnectFourGame();
             initializeBoard();
+            updatePlayerInfo();
             updateStatus();
+            
+            // Check if AI should move first
+            if (!playerIsFirst) {
+                makeAiMove();
+            }
         }
 
         function initializeBoard() {
@@ -275,10 +304,14 @@
             const gameResult = game.get_game_result();
             
             if (gameResult === 1) {
-                status.innerHTML = '<span class="winner">🎉 You Win! 🎉</span>';
+                const winner = playerIsFirst ? 'You Win!' : 'AI Wins!';
+                const emoji = playerIsFirst ? '🎉' : '🤖';
+                status.innerHTML = `<span class="winner">${emoji} ${winner} ${emoji}</span>`;
                 disableBoard();
             } else if (gameResult === 2) {
-                status.innerHTML = '<span class="winner">🤖 AI Wins! 🤖</span>';
+                const winner = playerIsFirst ? 'AI Wins!' : 'You Win!';
+                const emoji = playerIsFirst ? '🤖' : '🎉';
+                status.innerHTML = `<span class="winner">${emoji} ${winner} ${emoji}</span>`;
                 disableBoard();
             } else if (gameResult === 3) {
                 status.innerHTML = '<span class="winner">🤝 It\'s a Draw! 🤝</span>';
@@ -292,18 +325,30 @@
             }
         }
 
+        function updatePlayerInfo() {
+            const playerInfo = document.getElementById('playerInfo');
+            if (playerIsFirst) {
+                playerInfo.innerHTML = 'You are <span style="color: #ff6b6b;">Red (First)</span> | AI is <span style="color: #4ecdc4;">Blue (Second)</span>';
+            } else {
+                playerInfo.innerHTML = 'You are <span style="color: #4ecdc4;">Blue (Second)</span> | AI is <span style="color: #ff6b6b;">Red (First)</span>';
+            }
+        }
+
         function updateAiEvaluation(evaluation) {
             const evalDiv = document.getElementById('aiEvaluation');
             if (evaluation !== undefined && evaluation !== null) {
                 let evalText = '';
                 let evalColor = '';
                 
-                if (evaluation < -0.2) {
+                // Flip evaluation interpretation based on player order
+                const adjustedEval = playerIsFirst ? evaluation : -evaluation;
+                
+                if (adjustedEval < -0.2) {
                     evalText = `AI thinks it's winning (${evaluation.toFixed(2)})`;
-                    evalColor = '#4ecdc4'; // AI color
-                } else if (evaluation > 0.2) {
-                    evalText = `AI thinks you're winning (+${evaluation.toFixed(2)})`;
-                    evalColor = '#ff6b6b'; // Player color
+                    evalColor = playerIsFirst ? '#4ecdc4' : '#ff6b6b'; // AI color
+                } else if (adjustedEval > 0.2) {
+                    evalText = `AI thinks you're winning (${evaluation.toFixed(2)})`;
+                    evalColor = playerIsFirst ? '#ff6b6b' : '#4ecdc4'; // Player color
                 } else {
                     evalText = `Position is balanced (${evaluation.toFixed(2)})`;
                     evalColor = '#ffd700'; // Neutral color
@@ -313,6 +358,35 @@
             } else {
                 evalDiv.innerHTML = '';
             }
+        }
+
+        function makeAiMove() {
+            if (game.get_game_result() !== 0) {
+                return;
+            }
+
+            isAiTurn = true;
+            updateStatus();
+            
+            // Delay AI move for better UX
+            setTimeout(async () => {
+                const difficulty = parseInt(document.getElementById('difficulty').value);
+                const aiIsPlayer1 = !playerIsFirst; // AI is player 1 when human is player 2
+                const aiMove = game.get_ai_move(difficulty, aiIsPlayer1);
+                
+                if (aiMove !== undefined) {
+                    game.make_move(aiMove);
+                    updateBoard();
+                    
+                    // Display AI evaluation
+                    const evaluation = game.get_last_ai_evaluation();
+                    updateAiEvaluation(evaluation);
+                }
+                
+                isAiTurn = false;
+                updateStatus();
+                document.getElementById('undoButton').disabled = false;
+            }, 500);
         }
 
         function enableBoard() {
@@ -371,27 +445,7 @@
                 }
 
                 // AI turn
-                isAiTurn = true;
-                updateStatus();
-                
-                // Delay AI move for better UX
-                setTimeout(async () => {
-                    const difficulty = parseInt(document.getElementById('difficulty').value);
-                    const aiMove = game.get_ai_move(difficulty);
-                    
-                    if (aiMove !== undefined) {
-                        game.make_move(aiMove);
-                        updateBoard();
-                        
-                        // Display AI evaluation
-                        const evaluation = game.get_last_ai_evaluation();
-                        updateAiEvaluation(evaluation);
-                    }
-                    
-                    isAiTurn = false;
-                    updateStatus();
-                    document.getElementById('undoButton').disabled = false;
-                }, 500);
+                makeAiMove();
             }
         }
 
@@ -403,6 +457,11 @@
             updateStatus();
             updateAiEvaluation(null); // Clear AI evaluation
             document.getElementById('undoButton').disabled = true;
+            
+            // Check if AI should move first
+            if (!playerIsFirst) {
+                makeAiMove();
+            }
         }
 
         function undoMove() {
@@ -423,6 +482,11 @@
         // Event listeners
         document.getElementById('resetButton').onclick = resetGame;
         document.getElementById('undoButton').onclick = undoMove;
+        document.getElementById('playerOrder').onchange = function() {
+            playerIsFirst = this.value === 'first';
+            updatePlayerInfo();
+            resetGame(); // Reset game when player order changes
+        };
 
         // Initialize the game
         run();

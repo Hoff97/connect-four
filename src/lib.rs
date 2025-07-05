@@ -69,14 +69,16 @@ impl ConnectFourGame {
     }
 
     #[wasm_bindgen]
-    pub fn get_ai_move(&mut self, depth: u8) -> Option<u8> {
+    pub fn get_ai_move(&mut self, depth: u8, ai_is_player1: bool) -> Option<u8> {
         log!("AI is thinking with depth {}...", depth);
         
         let mut explored_states = HashMap::new();
+        let maximizing_player = ai_is_player1;
+        
         let game_tree = minmax::minmax(
             self.state.clone(),
             depth,
-            false, // AI is player 2, so minimizing
+            maximizing_player,
             &mut explored_states,
             f32::NEG_INFINITY,
             f32::INFINITY,
@@ -85,7 +87,7 @@ impl ConnectFourGame {
         // Store the evaluation for later retrieval
         self.last_ai_evaluation = Some(game_tree.evaluation);
 
-        if let Some(best_state) = game_tree.best_child(false, &explored_states) {
+        if let Some(best_state) = game_tree.best_child(maximizing_player, &explored_states) {
             // Find which column was played by comparing the states
             for action in self.state.get_possible_actions() {
                 let new_state = self.state.apply_action(&action);
