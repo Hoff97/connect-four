@@ -1,4 +1,41 @@
 use std::{collections::HashMap, fmt::Debug, hash::Hash};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Tile {
+    Empty,
+    Player1,
+    Player2,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Player {
+    Player1,
+    Player2,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameResult {
+    Win(Player),
+    Draw,
+    Ongoing,
+}
+
+impl Player {
+    pub fn switch(&self) -> Player {
+        match self {
+            Player::Player1 => Player::Player2,
+            Player::Player2 => Player::Player1,
+        }
+    }
+
+    pub fn tile(&self) -> Tile {
+        match self {
+            Player::Player1 => Tile::Player1,
+            Player::Player2 => Tile::Player2,
+        }
+    }
+}
 
 pub trait GameState {
     type Action;

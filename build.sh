@@ -11,7 +11,7 @@ if ! command -v wasm-pack &> /dev/null; then
 fi
 
 # Build the WebAssembly module
-wasm-pack build --target web --out-dir pkg
+wasm-pack build --target web --out-dir webpage/pkg
 
 echo "Build complete!"
 echo ""

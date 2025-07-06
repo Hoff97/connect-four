@@ -1,7 +1,7 @@
 mod four;
 mod minmax;
 
-use crate::minmax::GameState;
+use crate::minmax::{GameResult, GameState, Player};
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
@@ -37,8 +37,8 @@ impl ConnectFourGame {
     #[wasm_bindgen]
     pub fn get_current_player(&self) -> u8 {
         match self.state.current_player {
-            four::Player::Player1 => 1,
-            four::Player::Player2 => 2,
+            Player::Player1 => 1,
+            Player::Player2 => 2,
         }
     }
 
@@ -65,10 +65,10 @@ impl ConnectFourGame {
     #[wasm_bindgen]
     pub fn get_game_result(&self) -> u8 {
         match self.state.get_terminal() {
-            four::GameResult::Win(four::Player::Player1) => 1,
-            four::GameResult::Win(four::Player::Player2) => 2,
-            four::GameResult::Draw => 3,
-            four::GameResult::Ongoing => 0,
+            GameResult::Win(Player::Player1) => 1,
+            GameResult::Win(Player::Player2) => 2,
+            GameResult::Draw => 3,
+            GameResult::Ongoing => 0,
         }
     }
 

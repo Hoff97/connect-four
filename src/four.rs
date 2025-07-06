@@ -1,47 +1,10 @@
-use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use crate::minmax::GameState;
+use crate::minmax::{GameState, Player, Tile, GameResult};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GameAction {
     pub column: u8, // Column index where the disc is dropped
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Tile {
-    Empty,
-    Player1,
-    Player2,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Player {
-    Player1,
-    Player2,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GameResult {
-    Win(Player),
-    Draw,
-    Ongoing,
-}
-
-impl Player {
-    fn switch(&self) -> Player {
-        match self {
-            Player::Player1 => Player::Player2,
-            Player::Player2 => Player::Player1,
-        }
-    }
-
-    fn tile(&self) -> Tile {
-        match self {
-            Player::Player1 => Tile::Player1,
-            Player::Player2 => Tile::Player2,
-        }
-    }
 }
 
 pub const BOARD_WIDTH: usize = 7;
