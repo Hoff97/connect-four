@@ -28,9 +28,9 @@ pub enum CheckersTile {
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct CheckersBoard {
-    board: [[CheckersTile; 8]; 8],
+    pub board: [[CheckersTile; 8]; 8],
     pub current_player: Player,
-    moves_without_capture: u32,
+    pub moves_without_capture: u32,
 }
 
 impl Debug for CheckersBoard {
@@ -287,7 +287,7 @@ impl CheckersBoard {
         board
     }
 
-    fn count_pieces(&self, player: Player) -> u32 {
+    pub fn count_pieces(&self, player: Player) -> u32 {
         let mut count = 0;
         for row in 0..8 {
             for col in 0..8 {

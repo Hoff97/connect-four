@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkers - Play Against AI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 580px;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-info {
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+            background: #8b4513;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            margin: 12px 0;
+            max-width: 100%;
+            border: 4px solid #654321;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            max-width: 11vw;
+            max-height: 11vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1;
+            border-radius: 8px;
+        }
+
+        .cell.light {
+            background: #f0d9b5;
+        }
+
+        .cell.dark {
+            background: #b58863;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .cell.selectable {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        }
+
+        .cell.selected {
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+
+        .cell.possible-move {
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+        }
+
+        .cell.possible-capture {
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
+            animation: pulse-capture 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-capture {
+            0% { box-shadow: 0 0 20px rgba(255, 165, 0, 0.8); }
+            50% { box-shadow: 0 0 30px rgba(255, 165, 0, 1.0); }
+            100% { box-shadow: 0 0 20px rgba(255, 165, 0, 0.8); }
+        }
+
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+        }
+
+        .piece.player1 {
+            background: radial-gradient(circle, #e74c3c, #c0392b);
+            border: 3px solid #a93226;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        }
+
+        .piece.player2 {
+            background: radial-gradient(circle, #2c3e50, #1a252f);
+            border: 3px solid #0d1117;
+            box-shadow: 0 0 15px rgba(44, 62, 80, 0.5);
+        }
+
+        .piece.queen::before {
+            content: "♛";
+            font-size: 0.8em;
+            color: #ffd700;
+        }
+
+        .controls {
+            margin-top: 12px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin: 15px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 26px;
+        }
+
+        .winner {
+            font-size: 1.4em;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .loading {
+            color: #3498db;
+        }
+
+        .game-settings {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .difficulty select, .player-color select {
+            background: #2c3e50;
+            color: white;
+            border: 2px solid #3498db;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .difficulty select:focus, .player-color select:focus {
+            outline: none;
+            border-color: #e74c3c;
+        }
+
+        .move-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 0 5px;
+            }
+            
+            .board {
+                padding: 8px;
+                gap: 1px;
+            }
+            
+            .cell {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                min-height: 40px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .game-settings {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            button {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .cell {
+                width: 35px;
+                height: 35px;
+                min-width: 35px;
+                min-height: 35px;
+            }
+            
+            .piece {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>♛ Checkers ♛</h1>
+        
+        <div class="game-info">
+            <div id="playerInfo">You are <span style="color: #e74c3c;">Red</span> | AI is <span style="color: #2c3e50;">Black</span></div>
+            <div id="aiEvaluation" class="ai-evaluation" style="margin-top: 8px; font-size: 0.9em; opacity: 0.8;"></div>
+        </div>
+
+        <div class="game-settings">
+            <div class="difficulty">
+                <label for="difficulty">AI Difficulty: </label>
+                <select id="difficulty">
+                    <option value="2">Easy (Depth 2)</option>
+                    <option value="3" selected>Medium (Depth 3)</option>
+                    <option value="4">Hard (Depth 4)</option>
+                    <option value="5">Expert (Depth 5)</option>
+                    <option value="6">Master (Depth 6)</option>
+                </select>
+            </div>
+            
+            <div class="player-color">
+                <label for="playerColor">Play as: </label>
+                <select id="playerColor">
+                    <option value="red" selected>Red (First)</option>
+                    <option value="black">Black (Second)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="status" id="status">Select a piece to move</div>
+
+        <div class="board" id="board">
+            <!-- Board will be generated by JavaScript -->
+        </div>
+
+        <div class="move-info" id="moveInfo">
+            <div style="margin-bottom: 5px;">💡 <strong>How to play:</strong> Click a highlighted piece, then click where you want to move it. Captures (jumps) are highlighted in orange and are mandatory when available.</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="redCount">12</div>
+                <div class="stat-label">Red Pieces</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="moveCount">0</div>
+                <div class="stat-label">Moves w/o Capture</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="blackCount">12</div>
+                <div class="stat-label">Black Pieces</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="resetButton">New Game</button>
+            <button id="undoButton" disabled>Undo Move</button>
+            <button id="testCaptureButton">Test Capture Scenario</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, { CheckersGame } from './pkg/fourrow.js';
+
+        let game;
+        let gameHistory = [];
+        let isAiTurn = false;
+        let playerIsRed = true;
+        let selectedPiece = null;
+        let possibleMoves = [];
+
+        async function run() {
+            await init();
+            game = new CheckersGame();
+            initializeBoard();
+            updatePlayerInfo();
+            updateStatus();
+            updateStats();
+            
+            // Check if AI should move first
+            if (!playerIsRed) {
+                makeAiMove();
+            }
+        }
+
+        function initializeBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            // Create board cells
+            for (let row = 7; row >= 0; row--) { // Display from top to bottom
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.onclick = () => handleCellClick(row, col);
+                    board.appendChild(cell);
+                }
+            }
+            
+            updateBoard();
+        }
+
+        function updateBoard() {
+            const boardData = JSON.parse(game.get_board());
+            const cells = document.querySelectorAll('.cell');
+            
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const tileValue = boardData[row][col];
+                
+                // Clear existing piece
+                cell.innerHTML = '';
+                cell.classList.remove('selectable', 'selected', 'possible-move', 'possible-capture');
+                
+                // Add piece if exists
+                if (tileValue !== 'Empty') {
+                    const piece = document.createElement('div');
+                    piece.className = 'piece';
+                    
+                    if (tileValue === 'Player1') {
+                        piece.classList.add('player1');
+                    } else if (tileValue === 'Player2') {
+                        piece.classList.add('player2');
+                    } else if (tileValue === 'Queen1') {
+                        piece.classList.add('player1', 'queen');
+                    } else if (tileValue === 'Queen2') {
+                        piece.classList.add('player2', 'queen');
+                    }
+                    
+                    cell.appendChild(piece);
+                }
+            });
+            
+            // Highlight selectable pieces
+            highlightSelectablePieces();
+        }
+
+        function highlightSelectablePieces() {
+            const currentPlayer = game.get_current_player();
+            const isPlayerTurn = (playerIsRed && currentPlayer === 1) || (!playerIsRed && currentPlayer === 2);
+
+            console.log('Highlighting selectable pieces', [isAiTurn, currentPlayer, isPlayerTurn]); // Debug logging
+            if (isAiTurn || game.is_terminal()) return;
+            
+            
+            if (!isPlayerTurn) return;
+            
+            const moves = JSON.parse(game.get_possible_moves());
+            console.log('Available moves:', moves); // Debug logging
+            const selectablePieces = new Set();
+            
+            moves.forEach(moveSequence => {
+                if (moveSequence.length > 0) {
+                    const [fromRow, fromCol] = moveSequence[0];
+                    selectablePieces.add(`${fromRow},${fromCol}`);
+                }
+            });
+            
+            document.querySelectorAll('.cell').forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const key = `${row},${col}`;
+                
+                if (selectablePieces.has(key)) {
+                    cell.classList.add('selectable');
+                }
+            });
+        }
+
+        function handleCellClick(row, col) {
+            const currentPlayer = game.get_current_player();
+            const isPlayerTurn = (playerIsRed && currentPlayer === 1) || (!playerIsRed && currentPlayer === 2);
+
+            console.log(`Cell clicked: (${row}, ${col}), ${[isAiTurn, currentPlayer, isPlayerTurn, selectedPiece]}`); // Debug logging
+
+            if (isAiTurn || game.is_terminal()) return;
+
+            if (!isPlayerTurn) return;
+            
+            if (selectedPiece) {
+                // Check if this is a valid move
+                const validMove = possibleMoves.find(move => {
+                    const lastMove = move[move.length - 1];
+                    return lastMove[2] === row && lastMove[3] === col;
+                });
+                
+                if (validMove) {
+                    makeMove(validMove);
+                } else {
+                    // Check if clicking on another selectable piece
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    if (cell && cell.classList.contains('selectable')) {
+                        selectPiece(row, col);
+                    } else {
+                        // Deselect
+                        deselectPiece();
+                    }
+                }
+            } else {
+                // Try to select a piece
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                console.log(`Selecting piece at (${row}, ${col})`, cell); // Debug logging
+                if (cell && cell.classList.contains('selectable')) {
+                    selectPiece(row, col);
+                }
+            }
+        }
+
+        function selectPiece(row, col) {
+            deselectPiece();
+
+            selectedPiece = { row, col };
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            cell.classList.add('selected');
+            
+            // Find possible moves for this piece
+            const allMoves = JSON.parse(game.get_possible_moves());
+            possibleMoves = allMoves.filter(moveSequence => {
+                return moveSequence.length > 0 && 
+                       moveSequence[0][0] === row && 
+                       moveSequence[0][1] === col;
+            });
+            
+            console.log(`Selected piece at (${row}, ${col}), possible moves:`, possibleMoves); // Debug logging
+            
+            // Highlight possible destination squares
+            possibleMoves.forEach(moveSequence => {
+                const lastMove = moveSequence[moveSequence.length - 1];
+                const [, , toRow, toCol] = lastMove;
+                const targetCell = document.querySelector(`[data-row="${toRow}"][data-col="${toCol}"]`);
+                if (targetCell) {
+                    // Check if this is a capture move
+                    const isCapture = moveSequence.length > 1 || 
+                        (moveSequence.length === 1 && 
+                         Math.abs(moveSequence[0][2] - moveSequence[0][0]) === 2 && 
+                         Math.abs(moveSequence[0][3] - moveSequence[0][1]) === 2);
+                    
+                    if (isCapture) {
+                        targetCell.classList.add('possible-capture');
+                        console.log(`Highlighting CAPTURE move to (${toRow}, ${toCol})`); // Debug logging
+                    } else {
+                        targetCell.classList.add('possible-move');
+                        console.log(`Highlighting regular move to (${toRow}, ${toCol})`); // Debug logging
+                    }
+                }
+            });
+        }
+
+        function deselectPiece() {
+            if (selectedPiece) {
+                const cell = document.querySelector(`[data-row="${selectedPiece.row}"][data-col="${selectedPiece.col}"]`);
+                if (cell) cell.classList.remove('selected');
+                selectedPiece = null;
+            }
+            
+            // Remove possible move highlights
+            document.querySelectorAll('.possible-move').forEach(cell => {
+                cell.classList.remove('possible-move');
+            });
+            
+            // Remove possible capture highlights
+            document.querySelectorAll('.possible-capture').forEach(cell => {
+                cell.classList.remove('possible-capture');
+            });
+            
+            possibleMoves = [];
+        }
+
+        function makeMove(moveSequence) {
+            console.log('Making move:', moveSequence); // Debug logging
+            
+            // Save current state for undo
+            gameHistory.push({
+                board: game.get_board(),
+                currentPlayer: game.get_current_player(),
+                movesWithoutCapture: game.get_moves_without_capture()
+            });
+
+            // Make the move
+            const moveJson = JSON.stringify(moveSequence);
+            console.log('Sending move JSON:', moveJson); // Debug logging
+            
+            if (game.make_move(moveJson)) {
+                console.log('Move successful'); // Debug logging
+                deselectPiece();
+                updateBoard();
+                updateStatus();
+                updateStats();
+                
+                // Check if game is over
+                if (game.is_terminal()) {
+                    document.getElementById('undoButton').disabled = false;
+                    return;
+                }
+
+                // AI turn
+                makeAiMove();
+            } else {
+                console.log('Move failed'); // Debug logging
+            }
+        }
+
+        function makeAiMove() {
+            if (game.is_terminal()) return;
+
+            isAiTurn = true;
+            updateStatus();
+            
+            // Delay AI move for better UX
+            setTimeout(async () => {
+                const difficulty = parseInt(document.getElementById('difficulty').value);
+                const aiIsPlayer1 = !playerIsRed;
+                const aiMoveJson = game.get_ai_move(difficulty, aiIsPlayer1);
+                
+                if (aiMoveJson && aiMoveJson !== "[]") {
+                    const aiMove = JSON.parse(aiMoveJson);
+                    game.make_move(aiMoveJson);
+                    isAiTurn = false;
+                    updateBoard();
+                    updateStats();
+                    
+                    // Display AI evaluation
+                    const evaluation = game.get_last_ai_evaluation();
+                    updateAiEvaluation(evaluation);
+                    
+                    // Show AI move info
+                    displayMoveInfo(aiMove, true);
+                }
+                
+                isAiTurn = false;
+                updateStatus();
+                document.getElementById('undoButton').disabled = false;
+            }, 1000);
+        }
+
+        function displayMoveInfo(moveSequence, isAi) {
+            const moveInfo = document.getElementById('moveInfo');
+            if (moveSequence.length === 0) return;
+            
+            const player = isAi ? 'AI' : 'You';
+            
+            let isCapture = false;
+            if (moveSequence.length > 1) {
+                isCapture = true;
+            } else if (moveSequence.length === 1) {
+                const [fromRow, fromCol, toRow, toCol] = moveSequence[0];
+                isCapture = Math.abs(toRow - fromRow) === 2;
+            }
+            
+            if (isCapture) {
+                const captureCount = moveSequence.length;
+                moveInfo.innerHTML = `🎯 ${player} captured ${captureCount} piece${captureCount > 1 ? 's' : ''}! ${captureCount > 1 ? 'Multi-capture!' : ''}`;
+            } else {
+                moveInfo.innerHTML = `↗️ ${player} moved a piece. Keep positioning for future captures!`;
+            }
+            
+            // Clear after 4 seconds
+            setTimeout(() => {
+                moveInfo.innerHTML = '💡 <strong>Capture Info:</strong> Captures become available when your pieces can jump over opponent pieces diagonally.';
+            }, 4000);
+        }
+
+        function updateStatus() {
+            const status = document.getElementById('status');
+            
+            if (game.is_terminal()) {
+                const gameResult = game.get_game_result();
+                if (gameResult === 1) {
+                    const winner = playerIsRed ? 'You Win!' : 'AI Wins!';
+                    const emoji = playerIsRed ? '🎉' : '🤖';
+                    status.innerHTML = `<span class="winner">${emoji} ${winner} ${emoji}</span>`;
+                } else if (gameResult === 2) {
+                    const winner = playerIsRed ? 'AI Wins!' : 'You Win!';
+                    const emoji = playerIsRed ? '🤖' : '🎉';
+                    status.innerHTML = `<span class="winner">${emoji} ${winner} ${emoji}</span>`;
+                } else if (gameResult === 3) {
+                    status.innerHTML = '<span class="winner">🤝 It\'s a Draw! 🤝</span>';
+                }
+            } else if (isAiTurn) {
+                status.innerHTML = '<span class="loading">🤖 AI is thinking...</span>';
+            } else {
+                const currentPlayer = game.get_current_player();
+                const isPlayerTurn = (playerIsRed && currentPlayer === 1) || (!playerIsRed && currentPlayer === 2);
+                
+                if (isPlayerTurn) {
+                    // Check if there are any capture moves available
+                    const moves = JSON.parse(game.get_possible_moves());
+                    const hasCaptures = moves.some(moveSequence => {
+                        if (moveSequence.length > 1) return true;
+                        if (moveSequence.length === 1) {
+                            const [fromRow, fromCol, toRow, toCol] = moveSequence[0];
+                            const rowDiff = Math.abs(toRow - fromRow);
+                            const colDiff = Math.abs(toCol - fromCol);
+                            return rowDiff === 2 && colDiff === 2;
+                        }
+                        return false;
+                    });
+
+                    console.log("Moves:", moves);
+                    
+                    if (hasCaptures) {
+                        status.innerHTML = '⚡ <strong>Capture moves available!</strong> Select a piece to capture.';
+                    } else {
+                        status.textContent = 'Your turn! Select a piece to move.';
+                    }
+                } else {
+                    status.textContent = 'AI\'s turn...';
+                }
+            }
+        }
+
+        function updatePlayerInfo() {
+            const playerInfo = document.getElementById('playerInfo');
+            if (playerIsRed) {
+                playerInfo.innerHTML = 'You are <span style="color: #e74c3c;">Red (First)</span> | AI is <span style="color: #2c3e50;">Black (Second)</span>';
+            } else {
+                playerInfo.innerHTML = 'You are <span style="color: #2c3e50;">Black (Second)</span> | AI is <span style="color: #e74c3c;">Red (First)</span>';
+            }
+        }
+
+        function updateAiEvaluation(evaluation) {
+            const evalDiv = document.getElementById('aiEvaluation');
+            if (evaluation !== undefined && evaluation !== null) {
+                let evalText = '';
+                let evalColor = '';
+                
+                // Adjust evaluation based on player color
+                const adjustedEval = playerIsRed ? evaluation : -evaluation;
+                
+                if (adjustedEval < -0.2) {
+                    evalText = `AI thinks it's winning (${evaluation.toFixed(2)})`;
+                    evalColor = playerIsRed ? '#2c3e50' : '#e74c3c';
+                } else if (adjustedEval > 0.2) {
+                    evalText = `AI thinks you're winning (${evaluation.toFixed(2)})`;
+                    evalColor = playerIsRed ? '#e74c3c' : '#2c3e50';
+                } else {
+                    evalText = `Position is balanced (${evaluation.toFixed(2)})`;
+                    evalColor = '#3498db';
+                }
+                
+                evalDiv.innerHTML = `<span style="color: ${evalColor};">🧠 ${evalText}</span>`;
+            } else {
+                evalDiv.innerHTML = '';
+            }
+        }
+
+        function updateStats() {
+            const boardData = JSON.parse(game.get_board());
+            let redCount = 0;
+            let blackCount = 0;
+            
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const tile = boardData[row][col];
+                    if (tile === 'Player1' || tile === 'Queen1') {
+                        redCount++;
+                    } else if (tile === 'Player2' || tile === 'Queen2') {
+                        blackCount++;
+                    }
+                }
+            }
+            
+            document.getElementById('redCount').textContent = redCount;
+            document.getElementById('blackCount').textContent = blackCount;
+            document.getElementById('moveCount').textContent = game.get_moves_without_capture();
+        }
+
+        function resetGame() {
+            game.reset();
+            gameHistory = [];
+            isAiTurn = false;
+            selectedPiece = null;
+            possibleMoves = [];
+            updateBoard();
+            updateStatus();
+            updateStats();
+            updateAiEvaluation(null);
+            document.getElementById('undoButton').disabled = true;
+            document.getElementById('moveInfo').textContent = '';
+            
+            // Check if AI should move first
+            if (!playerIsRed) {
+                makeAiMove();
+            }
+        }
+
+        function undoMove() {
+            if (gameHistory.length === 0 || isAiTurn) return;
+            
+            // For now, just reset - in a full implementation, you'd restore the previous state
+            resetGame();
+        }
+
+        // Event listeners
+        document.getElementById('resetButton').onclick = resetGame;
+        document.getElementById('undoButton').onclick = undoMove;
+        document.getElementById('testCaptureButton').onclick = function() {
+            console.log('Setting up test capture scenario...');
+            // For now, just log that we need this feature
+            console.log('Test capture scenario would need backend support');
+        };
+        document.getElementById('playerColor').onchange = function() {
+            playerIsRed = this.value === 'red';
+            updatePlayerInfo();
+            resetGame();
+        };
+
+        // Initialize the game
+        run();
+    </script>
+</body>
+</html>
