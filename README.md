@@ -1,14 +1,27 @@
-# Connect Four WebAssembly Game
+# WebAssembly Board Games
 
-A web-based Connect Four game where you can play against an AI opponent. Built with Rust compiled to WebAssembly for high-performance AI calculations.
+A collection of web-based board games where you can play against AI opponents. Built with Rust compiled to WebAssembly for high-performance AI calculations.
 
 ## 🎮 Play Online
 
-The game is automatically deployed to GitHub Pages: **[Play Connect Four](https://Hoff97.github.io/connect-four)**
+The games are automatically deployed to GitHub Pages: **[Play Board Games](https://Hoff97.github.io/connect-four)**
+
+## Games Available
+
+### Connect Four
+- Classic Connect Four gameplay
+- Drop pieces to get 4 in a row
+- AI with multiple difficulty levels
+
+### Checkers
+- Full implementation of American Checkers/Draughts
+- Mandatory captures and multi-jump sequences
+- King promotion when reaching opposite end
+- Complete rule enforcement including draw conditions
 
 ## Features
 
-- 🎮 Play Connect Four against AI
+- 🎮 Play Connect Four and Checkers against AI
 - 🤖 Multiple AI difficulty levels (Easy to Expert)
 - 🎨 Beautiful, responsive web interface
 - ⚡ Fast AI calculations powered by WebAssembly
@@ -16,6 +29,7 @@ The game is automatically deployed to GitHub Pages: **[Play Connect Four](https:
 - 📱 Mobile-friendly design
 - 🎯 Choose to play as first or second player
 - 🧠 AI evaluation display showing position assessment
+- 🎪 Visual highlighting for valid moves and captures
 
 ## Prerequisites
 
@@ -33,21 +47,35 @@ The game is automatically deployed to GitHub Pages: **[Play Connect Four](https:
 2. **Start a local server:**
    ```bash
    # Using Python (recommended)
+   cd webpage
    python3 -m http.server 8000
    
    # Or using Node.js
+   cd webpage
    npx serve .
-   
-   # Or using npm (if you have package.json)
-   npm run serve
    ```
 
 3. **Open your browser:**
-   Navigate to `http://localhost:8000` and open `index.html`
+   Navigate to `http://localhost:8000` and open:
+   - `connect-four.html` for Connect Four
+   - `checkers.html` for Checkers
 
 ## How to Play
 
+### Connect Four
 1. **You are Red pieces, AI is Blue pieces**
+2. **Click on a column** to drop your piece
+3. **Get 4 in a row** (horizontal, vertical, or diagonal) to win
+4. **Choose AI difficulty** from the dropdown menu
+5. **Use "New Game"** to restart or **"Undo Move"** to take back your last move
+
+### Checkers
+1. **Choose your color** (Red or Black) and AI difficulty
+2. **Click on a highlighted piece** to select it
+3. **Click on a highlighted destination** to move
+4. **Captures are mandatory** - orange highlighting shows capture moves
+5. **Multi-jump captures** are automatically chained together
+6. **Reach the opposite end** to promote pieces to Kings
 2. **Click on a column** to drop your piece
 3. **Get 4 in a row** (horizontal, vertical, or diagonal) to win
 4. **Choose AI difficulty** from the dropdown menu
@@ -66,34 +94,39 @@ The game is automatically deployed to GitHub Pages: **[Play Connect Four](https:
 - **Frontend**: HTML5, CSS3, JavaScript (ES6 modules)
 - **Backend**: Rust compiled to WebAssembly
 - **AI Algorithm**: Minimax with alpha-beta pruning
-- **Heuristic**: Advanced position evaluation with threat detection
+- **Games**: Connect Four and Checkers with complete rule implementations
 
 ### AI Implementation
 The AI uses a sophisticated minimax algorithm with:
 - Alpha-beta pruning for efficiency
-- Position-based heuristics
-- Threat detection (lines of 3 that can become 4)
+- Game-specific position evaluation heuristics
+- Advanced threat detection
 - Dynamic evaluation based on board control
+- Optimized move generation for each game type
 
 ### WebAssembly Interface
 The Rust code is compiled to WebAssembly and provides:
-- Game state management
-- Move validation
-- AI move calculation
-- Game result detection
+- Game state management for both games
+- Move validation and rule enforcement
+- AI move calculation with configurable difficulty
+- Game result detection and draw conditions
 
 ## Development
 
 ### Project Structure
 ```
-rs-four/
+fourrow/
 ├── src/
 │   ├── lib.rs          # WebAssembly bindings
-│   ├── four.rs         # Game logic
+│   ├── four.rs         # Connect Four game logic
+│   ├── checkers.rs     # Checkers game logic
 │   ├── minmax.rs       # AI implementation
 │   └── main.rs         # CLI version (optional)
-├── pkg/                # Generated WebAssembly files
-├── index.html          # Web interface
+├── webpage/
+│   ├── index.html      # Connect Four web interface
+│   ├── checkers.html   # Checkers web interface
+│   └── pkg/            # Generated WebAssembly files
+├── pkg/                # WebAssembly build output
 ├── build.sh            # Build script
 ├── Cargo.toml          # Rust dependencies
 └── package.json        # npm scripts
@@ -109,44 +142,49 @@ rs-four/
 2. **Clone and build:**
    ```bash
    git clone <your-repo>
-   cd rs-four
+   cd fourrow
    ./build.sh
    ```
 
 3. **Serve locally:**
    ```bash
+   cd webpage
    python3 -m http.server 8000
    ```
 
 ### Customization
 
 #### Modifying AI Difficulty
-Edit the difficulty options in `index.html`:
+Edit the difficulty options in either `connect-four.html` or `checkers.html`:
 ```javascript
 <select id="difficulty">
-    <option value="3">Easy (Depth 3)</option>
-    <option value="5" selected>Medium (Depth 5)</option>
-    <option value="7">Hard (Depth 7)</option>
-    <option value="9">Expert (Depth 9)</option>
+    <option value="2">Easy (Depth 2)</option>
+    <option value="3" selected>Medium (Depth 3)</option>
+    <option value="4">Hard (Depth 4)</option>
+    <option value="5">Expert (Depth 5)</option>
 </select>
 ```
 
 #### Adjusting AI Heuristics
-Modify the scoring in `src/four.rs`:
+Modify the scoring in `src/four.rs` for Connect Four:
 ```rust
 // Column position scores
 let column_scores = [0.0005, 0.002, 0.004, 0.005, 0.004, 0.002, 0.0005];
+```
 
-// Line of 3 scores
-let score = if extension_sides == 2 { 0.08 } else { 0.05 };
+Or in `src/checkers.rs` for Checkers:
+```rust
+// Piece values and position scoring
+let piece_value = if is_king { 3.0 } else { 1.0 };
 ```
 
 #### Styling Changes
-All visual styling is in the `<style>` section of `index.html`. The design uses:
+All visual styling is in the `<style>` section of each HTML file. The design uses:
 - CSS Grid for board layout
 - CSS Gradients for modern look
 - Flexbox for responsive design
-- CSS Transitions for smooth animations
+- CSS Transitions and animations for smooth interactions
+- Outline-based highlighting for clear move indication
 
 ## Deployment
 
@@ -172,8 +210,9 @@ To deploy to any static hosting service:
    ```
 
 2. **Upload all files** to your hosting service:
-   - `index.html`
-   - `pkg/` directory (contains WebAssembly files)
+   - `webpage/connect-four.html` (Connect Four)
+   - `webpage/checkers.html` (Checkers)
+   - `webpage/pkg/` directory (contains WebAssembly files)
    - `.nojekyll` file (for GitHub Pages)
 
 3. **Ensure proper MIME types:**
@@ -191,10 +230,11 @@ To deploy to any static hosting service:
 2. **"Module not found" errors**
    - Ensure you're serving the files from a web server
    - Files must be served over HTTP, not opened directly in browser
+   - Make sure you're in the `webpage` directory when serving
 
 3. **CORS errors**
    - Use a proper web server (Python, Node.js, etc.)
-   - Don't open `index.html` directly in browser
+   - Don't open HTML files directly in browser
 
 4. **AI moves slowly**
    - Reduce AI difficulty level
@@ -222,4 +262,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Built with Rust and WebAssembly
 - Uses minimax algorithm for AI
-- Inspired by classic Connect Four gameplay
+- Inspired by classic Connect Four and Checkers gameplay
+- Implements complete rule sets for both games including advanced features like multi-jump captures

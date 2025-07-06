@@ -58,6 +58,7 @@ jobs:
     
     - name: Copy WebAssembly to webpage
       run: |
+        mkdir -p webpage/pkg
         cp -r pkg/* webpage/pkg/
     
     - name: Setup Pages
