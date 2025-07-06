@@ -815,9 +815,9 @@
         function updatePlayerInfo() {
             const playerInfo = document.getElementById('playerInfo');
             if (playerIsRed) {
-                playerInfo.innerHTML = 'You are <span style="color: #e74c3c;">Red (First)</span> | AI is <span style="color: #2c3e50;">Black (Second)</span>';
+                playerInfo.innerHTML = 'You are <span style="color: #e74c3c;">Red (First)</span> | AI is <span style="color: #95a5a6;">Black (Second)</span>';
             } else {
-                playerInfo.innerHTML = 'You are <span style="color: #2c3e50;">Black (Second)</span> | AI is <span style="color: #e74c3c;">Red (First)</span>';
+                playerInfo.innerHTML = 'You are <span style="color: #95a5a6;">Black (Second)</span> | AI is <span style="color: #e74c3c;">Red (First)</span>';
             }
         }
 
@@ -832,10 +832,10 @@
                 
                 if (adjustedEval < -0.2) {
                     evalText = `AI thinks it's winning (${evaluation.toFixed(2)})`;
-                    evalColor = playerIsRed ? '#2c3e50' : '#e74c3c';
+                    evalColor = playerIsRed ? '#95a5a6' : '#e74c3c';
                 } else if (adjustedEval > 0.2) {
                     evalText = `AI thinks you're winning (${evaluation.toFixed(2)})`;
-                    evalColor = playerIsRed ? '#e74c3c' : '#2c3e50';
+                    evalColor = playerIsRed ? '#e74c3c' : '#95a5a6';
                 } else {
                     evalText = `Position is balanced (${evaluation.toFixed(2)})`;
                     evalColor = '#3498db';

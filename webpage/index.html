@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect Four - Play Against AI</title>
+    <title>Game Hub - Connect Four & Checkers</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             min-height: 100vh;
@@ -20,594 +20,170 @@
 
         .container {
             text-align: center;
-            max-width: 520px;
+            max-width: 600px;
             width: 100%;
-            padding: 0 10px;
+            padding: 0 20px;
         }
 
         h1 {
-            font-size: 2em;
-            margin-bottom: 15px;
+            font-size: 3em;
+            margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
-        .game-info {
-            margin-bottom: 15px;
-            font-size: 1em;
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
         }
 
-        .board {
+        .games-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            background: #1a1a2e;
-            padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            margin: 12px 0;
-            max-width: 100%;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
         }
 
-        .cell {
-            width: 48px;
-            height: 48px;
-            max-width: 12vw;
-            max-height: 12vw;
-            background: #16213e;
-            border-radius: 50%;
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .game-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .game-description {
+            font-size: 1em;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .features {
+            margin-top: 50px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .features h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            text-align: left;
+        }
+
+        .feature {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            aspect-ratio: 1;
         }
 
-        .cell:hover {
-            background: #0f3460;
-            transform: scale(1.05);
+        .feature-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
         }
 
-        .cell.empty {
-            background: #16213e;
-        }
-
-        .cell.player1 {
-            background: radial-gradient(circle, #ff6b6b, #ee5a52);
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
-        }
-
-        .cell.player2 {
-            background: radial-gradient(circle, #4ecdc4, #44a08d);
-            box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
-        }
-
-        .controls {
-            margin-top: 12px;
-        }
-
-        button {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            font-size: 0.9em;
-            border-radius: 20px;
-            cursor: pointer;
-            margin: 0 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 12px rgba(255, 107, 107, 0.3);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status {
-            margin: 12px 0;
-            font-size: 1em;
-            font-weight: bold;
-            min-height: 24px;
-        }
-
-        .winner {
-            font-size: 1.3em;
-            color: #ffd700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .loading {
-            color: #4ecdc4;
-        }
-
-        .difficulty {
-            margin: 12px 0;
-        }
-
-        .game-settings {
-            margin: 12px 0;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .player-order {
-            margin: 12px 0;
-        }
-
-        .difficulty select, .player-order select {
-            background: #1a1a2e;
-            color: white;
-            border: 2px solid #4ecdc4;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            cursor: pointer;
-        }
-
-        .difficulty select:focus, .player-order select:focus {
-            outline: none;
-            border-color: #ff6b6b;
-        }
-
-        .column-buttons {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-
-        .column-button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid transparent;
-            border-radius: 8px;
-            padding: 4px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.8em;
-        }
-
-        .column-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: #4ecdc4;
-        }
-
-        .column-button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        
-        /* Small screens - below 450px */
-        @media (max-width: 410px) {
-            .container {
-                padding: 0 2px;
-            }
-            
-            .board {
-                padding: 4px;
-                gap: 1px;
-                margin: 6px 0;
-            }
-            
-            .cell {
-                width: 40px;
-                height: 40px;
-                min-width: 40px;
-                min-height: 40px;
-                max-width: 10vw;
-                max-height: 10vw;
-            }
-            
-            .column-buttons {
-                gap: 1px;
-                margin-bottom: 2px;
-            }
-            
-            .column-button {
-                padding: 1px;
-                font-size: 0.6em;
-                min-height: 20px;
-            }
-            
+        @media (max-width: 768px) {
             h1 {
-                font-size: 1.3em;
-                margin-bottom: 8px;
+                font-size: 2.2em;
             }
             
-            .game-info {
-                font-size: 0.8em;
-                margin-bottom: 8px;
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
             
-            .game-settings {
-                margin: 6px 0;
+            .game-card {
+                padding: 20px;
             }
             
-            button {
-                padding: 4px 8px;
-                font-size: 0.75em;
-                margin: 0 2px;
-            }
-        }
-        
-        /* Very small screens - below 360px */
-        @media (max-width: 360px) {
-            .container {
-                padding: 0 1px;
-            }
-            
-            .board {
-                padding: 2px;
-                gap: 0px;
-                margin: 4px 0;
-            }
-            
-            .cell {
-                width: 32px;
-                height: 32px;
-                min-width: 32px;
-                min-height: 32px;
-            }
-            
-            .column-buttons {
-                gap: 0px;
-                margin-bottom: 1px;
-            }
-            
-            .column-button {
-                font-size: 0.5em;
-                padding: 0px;
-                min-height: 18px;
-            }
-            
-            h1 {
-                font-size: 1.2em;
-                margin-bottom: 6px;
-            }
-            
-            .game-info {
-                font-size: 0.75em;
-                margin-bottom: 6px;
-            }
-            
-            .status {
-                font-size: 0.8em;
-                margin: 6px 0;
-            }
-            
-            button {
-                padding: 3px 6px;
-                font-size: 0.7em;
-                margin: 0 1px;
-            }
-            
-            .difficulty select, .player-order select {
-                font-size: 0.7em;
-                padding: 2px 4px;
+            .features-list {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔴 Connect Four 🟡</h1>
+        <h1>🎮 Game Hub</h1>
+        <p class="subtitle">Choose your game and challenge the AI!</p>
         
-        <div class="game-info">
-            <div id="playerInfo">You are <span style="color: #ff6b6b;">Red</span> | AI is <span style="color: #4ecdc4;">Blue</span></div>
-            <div id="aiEvaluation" class="ai-evaluation" style="margin-top: 8px; font-size: 0.8em; opacity: 0.8;"></div>
-        </div>
-
-        <div class="game-settings">
-            <div class="difficulty">
-                <label for="difficulty">AI Difficulty: </label>
-                <select id="difficulty">
-                    <option value="3">Easy (Depth 3)</option>
-                    <option value="5" selected>Medium (Depth 5)</option>
-                    <option value="7">Hard (Depth 7)</option>
-                    <option value="9">Expert (Depth 9)</option>
-                    <option value="15">Craazy (Depth 15)</option>
-                    <option value="20">Impossible (Depth 20)</option>
-                </select>
-            </div>
+        <div class="games-grid">
+            <a href="connect-four.html" class="game-card">
+                <div class="game-icon">🔴</div>
+                <div class="game-title">Connect Four</div>
+                <div class="game-description">
+                    Classic strategy game! Drop your pieces and try to get four in a row before your opponent does.
+                </div>
+            </a>
             
-            <div class="player-order">
-                <label for="playerOrder">Play as: </label>
-                <select id="playerOrder">
-                    <option value="first" selected>First Player (Red)</option>
-                    <option value="second">Second Player (Blue)</option>
-                </select>
+            <a href="checkers.html" class="game-card">
+                <div class="game-icon">♛</div>
+                <div class="game-title">Checkers</div>
+                <div class="game-description">
+                    Traditional checkers with capture rules! Move diagonally and jump over your opponent's pieces to win.
+                </div>
+            </a>
+        </div>
+        
+        <div class="features">
+            <h2>✨ Features</h2>
+            <div class="features-list">
+                <div class="feature">
+                    <div class="feature-icon">🤖</div>
+                    <div>Smart AI opponents with adjustable difficulty</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <div>Responsive design for all devices</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <div>Real-time move validation</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🧠</div>
+                    <div>AI evaluation insights</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <div>Fast WebAssembly performance</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎨</div>
+                    <div>Beautiful modern interface</div>
+                </div>
             </div>
-        </div>
-
-        <div class="status" id="status">Your turn! Click a column to drop your piece.</div>
-
-        <div class="column-buttons" id="columnButtons">
-            <!-- Column buttons will be generated by JavaScript -->
-        </div>
-
-        <div class="board" id="board">
-            <!-- Board will be generated by JavaScript -->
-        </div>
-
-        <div class="controls">
-            <button id="resetButton">New Game</button>
-            <button id="undoButton" disabled>Undo Move</button>
         </div>
     </div>
-
-    <script type="module">
-        import init, { ConnectFourGame } from './pkg/fourrow.js';
-
-        let game;
-        let gameHistory = [];
-        let isAiTurn = false;
-        let playerIsFirst = true; // Track if human player goes first
-
-        async function run() {
-            await init();
-            game = new ConnectFourGame();
-            initializeBoard();
-            updatePlayerInfo();
-            updateStatus();
-            
-            // Check if AI should move first
-            if (!playerIsFirst) {
-                makeAiMove();
-            }
-        }
-
-        function initializeBoard() {
-            const board = document.getElementById('board');
-            const columnButtons = document.getElementById('columnButtons');
-            
-            // Clear existing content
-            board.innerHTML = '';
-            columnButtons.innerHTML = '';
-
-            // Create column buttons
-            for (let col = 0; col < 7; col++) {
-                const button = document.createElement('button');
-                button.className = 'column-button';
-                button.textContent = `↓ ${col}`;
-                button.onclick = () => makeMove(col);
-                columnButtons.appendChild(button);
-            }
-
-            // Create board cells (top to bottom for display)
-            for (let row = 5; row >= 0; row--) {
-                for (let col = 0; col < 7; col++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell empty';
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-                    cell.onclick = () => makeMove(col);
-                    board.appendChild(cell);
-                }
-            }
-        }
-
-        function updateBoard() {
-            const boardData = JSON.parse(game.get_board());
-            const cells = document.querySelectorAll('.cell');
-            
-            cells.forEach(cell => {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                const tileValue = boardData[row][col];
-                
-                cell.className = 'cell';
-                if (tileValue === 'Empty') {
-                    cell.className += ' empty';
-                } else if (tileValue === 'Player1') {
-                    cell.className += ' player1';
-                } else if (tileValue === 'Player2') {
-                    cell.className += ' player2';
-                }
-            });
-        }
-
-        function updateStatus() {
-            const status = document.getElementById('status');
-            const gameResult = game.get_game_result();
-            
-            if (gameResult === 1) {
-                const winner = playerIsFirst ? 'You Win!' : 'AI Wins!';
-                const emoji = playerIsFirst ? '🎉' : '🤖';
-                status.innerHTML = `<span class="winner">${emoji} ${winner} ${emoji}</span>`;
-                disableBoard();
-            } else if (gameResult === 2) {
-                const winner = playerIsFirst ? 'AI Wins!' : 'You Win!';
-                const emoji = playerIsFirst ? '🤖' : '🎉';
-                status.innerHTML = `<span class="winner">${emoji} ${winner} ${emoji}</span>`;
-                disableBoard();
-            } else if (gameResult === 3) {
-                status.innerHTML = '<span class="winner">🤝 It\'s a Draw! 🤝</span>';
-                disableBoard();
-            } else if (isAiTurn) {
-                status.innerHTML = '<span class="loading">🤖 AI is thinking...</span>';
-                disableBoard();
-            } else {
-                status.textContent = 'Your turn! Click a column to drop your piece.';
-                enableBoard();
-            }
-        }
-
-        function updatePlayerInfo() {
-            const playerInfo = document.getElementById('playerInfo');
-            if (playerIsFirst) {
-                playerInfo.innerHTML = 'You are <span style="color: #ff6b6b;">Red (First)</span> | AI is <span style="color: #4ecdc4;">Blue (Second)</span>';
-            } else {
-                playerInfo.innerHTML = 'You are <span style="color: #4ecdc4;">Blue (Second)</span> | AI is <span style="color: #ff6b6b;">Red (First)</span>';
-            }
-        }
-
-        function updateAiEvaluation(evaluation) {
-            const evalDiv = document.getElementById('aiEvaluation');
-            if (evaluation !== undefined && evaluation !== null) {
-                let evalText = '';
-                let evalColor = '';
-                
-                // Flip evaluation interpretation based on player order
-                const adjustedEval = playerIsFirst ? evaluation : -evaluation;
-                
-                if (adjustedEval < -0.2) {
-                    evalText = `AI thinks it's winning (${evaluation.toFixed(2)})`;
-                    evalColor = playerIsFirst ? '#4ecdc4' : '#ff6b6b'; // AI color
-                } else if (adjustedEval > 0.2) {
-                    evalText = `AI thinks you're winning (${evaluation.toFixed(2)})`;
-                    evalColor = playerIsFirst ? '#ff6b6b' : '#4ecdc4'; // Player color
-                } else {
-                    evalText = `Position is balanced (${evaluation.toFixed(2)})`;
-                    evalColor = '#ffd700'; // Neutral color
-                }
-                
-                evalDiv.innerHTML = `<span style="color: ${evalColor};">🧠 ${evalText}</span>`;
-            } else {
-                evalDiv.innerHTML = '';
-            }
-        }
-
-        function makeAiMove() {
-            if (game.get_game_result() !== 0) {
-                return;
-            }
-
-            isAiTurn = true;
-            updateStatus();
-            
-            // Delay AI move for better UX
-            setTimeout(async () => {
-                const difficulty = parseInt(document.getElementById('difficulty').value);
-                const aiIsPlayer1 = !playerIsFirst; // AI is player 1 when human is player 2
-                const aiMove = game.get_ai_move(difficulty, aiIsPlayer1);
-                
-                if (aiMove !== undefined) {
-                    game.make_move(aiMove);
-                    updateBoard();
-                    
-                    // Display AI evaluation
-                    const evaluation = game.get_last_ai_evaluation();
-                    updateAiEvaluation(evaluation);
-                }
-                
-                isAiTurn = false;
-                updateStatus();
-                document.getElementById('undoButton').disabled = false;
-            }, 500);
-        }
-
-        function enableBoard() {
-            const possibleMoves = game.get_possible_moves();
-            const columnButtons = document.querySelectorAll('.column-button');
-            const cells = document.querySelectorAll('.cell');
-            
-            columnButtons.forEach((button, index) => {
-                button.disabled = !possibleMoves.includes(index);
-            });
-            
-            cells.forEach(cell => {
-                const col = parseInt(cell.dataset.col);
-                cell.style.cursor = possibleMoves.includes(col) ? 'pointer' : 'not-allowed';
-            });
-        }
-
-        function disableBoard() {
-            const columnButtons = document.querySelectorAll('.column-button');
-            const cells = document.querySelectorAll('.cell');
-            
-            columnButtons.forEach(button => {
-                button.disabled = true;
-            });
-            
-            cells.forEach(cell => {
-                cell.style.cursor = 'not-allowed';
-            });
-        }
-
-        async function makeMove(column) {
-            if (isAiTurn || game.get_game_result() !== 0) {
-                return;
-            }
-
-            const possibleMoves = game.get_possible_moves();
-            if (!possibleMoves.includes(column)) {
-                return;
-            }
-
-            // Save current state for undo
-            gameHistory.push({
-                board: game.get_board(),
-                currentPlayer: game.get_current_player()
-            });
-
-            // Make human move
-            if (game.make_move(column)) {
-                updateBoard();
-                updateStatus();
-                
-                // Check if game is over
-                if (game.get_game_result() !== 0) {
-                    document.getElementById('undoButton').disabled = false;
-                    return;
-                }
-
-                // AI turn
-                makeAiMove();
-            }
-        }
-
-        function resetGame() {
-            game.reset();
-            gameHistory = [];
-            isAiTurn = false;
-            updateBoard();
-            updateStatus();
-            updateAiEvaluation(null); // Clear AI evaluation
-            document.getElementById('undoButton').disabled = true;
-            
-            // Check if AI should move first
-            if (!playerIsFirst) {
-                makeAiMove();
-            }
-        }
-
-        function undoMove() {
-            if (gameHistory.length === 0 || isAiTurn) {
-                return;
-            }
-
-            // Undo last two moves (human + AI) or just the last move if it's the only one
-            const previousState = gameHistory.pop();
-            if (previousState) {
-                game.reset();
-                // Note: In a real implementation, you'd need to restore the exact state
-                // For now, just reset and let the user know
-                resetGame();
-            }
-        }
-
-        // Event listeners
-        document.getElementById('resetButton').onclick = resetGame;
-        document.getElementById('undoButton').onclick = undoMove;
-        document.getElementById('playerOrder').onchange = function() {
-            playerIsFirst = this.value === 'first';
-            updatePlayerInfo();
-            resetGame(); // Reset game when player order changes
-        };
-
-        // Initialize the game
-        run();
-    </script>
 </body>
 </html>
