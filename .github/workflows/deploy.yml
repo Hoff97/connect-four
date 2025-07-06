@@ -56,13 +56,17 @@ jobs:
     - name: Build WebAssembly
       run: wasm-pack build --target web --out-dir pkg
     
+    - name: Copy WebAssembly to webpage
+      run: |
+        cp -r pkg/* webpage/pkg/
+    
     - name: Setup Pages
       uses: actions/configure-pages@v4
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: '.'
+        path: 'webpage'
 
   deploy:
     environment:
