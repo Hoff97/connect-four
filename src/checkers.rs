@@ -315,6 +315,27 @@ impl CheckersBoard {
         }
         false
     }
+
+    fn calculate_proximity_bonus(&self, player1_pieces: &[(usize, usize)], player2_pieces: &[(usize, usize)]) -> f32 {
+        let mut total_proximity = 0.0;
+        let mut count = 0;
+        
+        // Calculate average distance between pieces of different players
+        for &(r1, c1) in player1_pieces {
+            for &(r2, c2) in player2_pieces {
+                let distance = ((r1 as i32 - r2 as i32).abs() + (c1 as i32 - c2 as i32).abs()) as f32;
+                // Closer pieces get higher bonus (inverse of distance)
+                total_proximity += 1.0 - (distance*distance)/ (14.0*14.0); // Normalize to a range of 0 to 1
+                count += 1;
+            }
+        }
+        
+        if count > 0 {
+            total_proximity / count as f32
+        } else {
+            0.0
+        }
+    }
 }
 
 impl GameState for CheckersBoard {
@@ -448,7 +469,10 @@ impl GameState for CheckersBoard {
         
         // Heuristic evaluation based on piece count and position
         let mut score = 0.0;
+        let mut player1_pieces = Vec::new();
+        let mut player2_pieces = Vec::new();
         
+        // First pass: calculate basic scores and collect piece positions
         for row in 0..8 {
             for col in 0..8 {
                 match self.board[row][col] {
@@ -456,20 +480,37 @@ impl GameState for CheckersBoard {
                         score += 10.0;
                         // Bonus for advancing pieces
                         score += row as f32 * 0.5;
+                        player1_pieces.push((row, col));
                     }
                     CheckersTile::Checker(Player::Player2) => {
                         score -= 10.0;
                         // Bonus for advancing pieces
                         score -= (7 - row) as f32 * 0.5;
+                        player2_pieces.push((row, col));
                     }
                     CheckersTile::Queen(Player::Player1) => {
                         score += 30.0; // Queens are more valuable
+                        player1_pieces.push((row, col));
                     }
                     CheckersTile::Queen(Player::Player2) => {
                         score -= 30.0;
+                        player2_pieces.push((row, col));
                     }
                     _ => {}
                 }
+            }
+        }
+        
+        // Add proximity bonus when one player has a material advantage
+        let piece_count_diff = player1_pieces.len() as i32 - player2_pieces.len() as i32;
+        if piece_count_diff.abs() > 2 {
+            let proximity_bonus = self.calculate_proximity_bonus(&player1_pieces, &player2_pieces);
+            if piece_count_diff > 0 {
+                // Player1 has advantage, bonus for being closer to Player2 pieces
+                score += proximity_bonus * 0.1;
+            } else {
+                // Player2 has advantage, bonus for being closer to Player1 pieces
+                score -= proximity_bonus * 0.1;
             }
         }
         
